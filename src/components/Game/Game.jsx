@@ -17,7 +17,7 @@ function Game() {
 
     if (!gameState) return <h1>Hi !!!</h1>;
 
-    return Field(gameState.player1.position, gameState.player2.position, gameState.puck);
+    return Field(gameState.player1.position, gameState.player2.position, gameState.puck, settings);
 } 
 
 export default Game;

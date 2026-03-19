@@ -15,7 +15,8 @@ export const settings= {
     puck: {
         defaultSpeed: 1,
         YDeviationCoeff: 2,
-        size: 1
+        size: 1,
+        speedcoeff: 75
     },
     goal: {
         size: 30,

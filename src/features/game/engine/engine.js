@@ -74,7 +74,7 @@ export class Engine {
             this.keys.down,
             this.settings
         );
-        this.state.puck = puckStep(this.state, this.settings);
+        this.state.puck = puckStep(this.state,deltaTime, this.settings);
     }
 
     

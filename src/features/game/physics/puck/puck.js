@@ -1,8 +1,8 @@
-export const puckStep = (game, settings) => {
+export const puckStep = (game, deltaTime, settings) => {
     let nextPuck = game.puck;
     const player1 = game.player1.position;
     const player2 = game.player2.position;
-    let divisions = 100;
+
     const goalLeft = makeRect(settings.goal.backGap,
                         50 - (settings.goal.size / 2) + settings.goal.postWidth,
                         settings.goal.depth, 
@@ -13,18 +13,18 @@ export const puckStep = (game, settings) => {
                         settings.goal.depth, 
                         settings.goal.size - settings.goal.postWidth
     );
-    for (let i = 0; i < divisions; i++) {
-        nextPuck = stepDivision(nextPuck, divisions);
-        nextPuck = handleCollision(nextPuck, player1, player2, settings);
 
-    }
+    nextPuck = step(nextPuck, deltaTime, settings.puck.speedcoeff);
+    nextPuck = handleCollision(nextPuck, player1, player2, settings);
+
+
     return nextPuck;
 }
 
-const stepDivision = (puck, nbStep) => ({
+const step = (puck, deltaTime, speed) => ({
     ...puck,
-    x: puck.x + puck.vx / nbStep,
-    y: puck.y + puck.vy / nbStep
+    x: puck.x + puck.vx  * deltaTime * speed ,
+    y: puck.y + puck.vy  * deltaTime * speed
 });
 
 const makeRect = (left, top, width, height) => ({
@@ -68,9 +68,7 @@ const postDeflection = (post, puck, settings) => {
     return impact * settings.goal.postDeflectionCoeff;
 }
 
-const handlePaddleCollision = (player1, player2, nextPuck, settings) => {
-    const puckRect = makePuckRectangle(nextPuck);
-
+const handlePaddleCollision = (player1, player2, nextPuck, puckRect, settings) => {
     const player1Defense = makeRect(
         settings.player1.defensePos, 
         player1, 
@@ -121,9 +119,7 @@ const handlePaddleCollision = (player1, player2, nextPuck, settings) => {
     return nextPuck;
 }
 
-const handleGoalCollision = (nextPuck, settings) => {
-    const puckRect = makePuckRectangle(nextPuck);
-
+const handleGoalCollision = (nextPuck, puckRect, settings) => {
     const goalTop = 50 - settings.goal.size / 2;
     const goalBottom = 50 + settings.goal.size / 2;
 
@@ -199,8 +195,9 @@ const handleBorderCollision =(nextPuck) => {
 }
 
 const handleCollision = (nextPuck, player1, player2, settings) => {
-    nextPuck = handlePaddleCollision(player1, player2, nextPuck, settings);
-    nextPuck = handleGoalCollision(nextPuck, settings);
+    const puckRect = makePuckRectangle(nextPuck);
+    nextPuck = handlePaddleCollision(player1, player2, nextPuck, puckRect, settings);
+    nextPuck = handleGoalCollision(nextPuck, puckRect, settings);
     nextPuck = handleBorderCollision(nextPuck);
     return nextPuck;
 };

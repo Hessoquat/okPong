@@ -3,9 +3,8 @@ import '../../assets/style/field.css'
 import Paddle from './Paddle';
 import Puck from './Puck';
 import Goal from './Goal';
-import { settings } from '../../features/game/config/gameSettings';
 
-function Field(player1Position, player2Position, puck) {
+function Field(player1Position, player2Position, puck, settings) {
     
     return(
         <div className='field' >
