@@ -1,0 +1,38 @@
+.field {
+    background-color: #FFF;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-around;
+    align-items: center;
+    color: #242424;
+    width: 100vw;
+    height: 100vh;
+}
+.paddle {
+    width: 0.8%;
+    position: absolute;
+}
+.player1 {
+    background-color: blue;
+}
+.player2 {
+    background-color: red;
+
+}
+.puck {
+    position: absolute;
+    background-color: #301510;
+    height: 1vmax;
+    width: 1vmax;
+    border-radius: 50%;
+}
+.goal{
+    background-color:#30151020;
+    position: absolute;
+}
+.goal1 {
+    left: 0;
+}
+.goal2 {
+    right: 0;
+}
