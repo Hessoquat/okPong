@@ -15,9 +15,17 @@ function Game() {
         return() => engine.stop();
     }, [])
 
-    if (!gameState) return <h1>Hi !!!</h1>;
-
-    return Field(gameState.player1.position, gameState.player2.position, gameState.puck, settings);
+    if (!gameState) return <h1>loading</h1>;
+    return(
+        <>
+        {Math.floor(gameState.time)}
+        <Field 
+            player1Postion={gameState.player1.position}
+            player2Position={gameState.player2.position}
+            puck={gameState.puck}
+            settings={settings} />
+        </>
+        );
 } 
 
 export default Game;

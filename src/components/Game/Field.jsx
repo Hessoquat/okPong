@@ -4,7 +4,7 @@ import Paddle from './Paddle';
 import Puck from './Puck';
 import Goal from './Goal';
 
-function Field(player1Position, player2Position, puck, settings) {
+function Field({player1Position, player2Position, puck, settings}) {
     
     return(
         <div className='field' >
