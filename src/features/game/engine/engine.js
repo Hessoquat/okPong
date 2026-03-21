@@ -1,7 +1,7 @@
 import { GAMEPHASE } from "./constants/gamePhase";
 import { initPuck } from "../factories/puckFactory";
 import { paddleStep } from "../physics/paddle/paddle";
-import { puckStep } from "../physics/puck/puck";
+import { hasPuckReachEndOfGoal, puckStep, simplePuckStep } from "../physics/puck/puck";
 
 export class Engine {
     constructor(settings, onUpdate) {
@@ -12,10 +12,12 @@ export class Engine {
                 period: 1,
                 time: 0,
                 player1: {
+                    id: 'p1',
                     goals: [],
                     position: 50 - (0.5 * settings.paddle.height)
                 },
                 player2: {
+                    id: 'p2',
                     goals: [],
                     position: 50 - (0.5 * settings.paddle.height)
                 },
@@ -24,7 +26,10 @@ export class Engine {
         this.keys = {z: false, s: false, up: false, down: false};
         this.running = false;
         this.lastTime = null;
-        this.attackplayerPos= null;
+        this.firstAttacker = this.state.player1.id;
+        this.attackplayer= null;
+        this.suspendedAnimation = null;
+        this.lastScorer = null;
         this.loop = this.loop.bind(this);
     }
 
@@ -67,26 +72,39 @@ export class Engine {
             case GAMEPHASE.playing:
                 this.playingStep(deltaTime);
                 break;
+            case GAMEPHASE.goal:
+                this.goalStep(deltaTime);
+                break;
         }
     }
 
     faceOffStep(deltaTime) {
-
-        if (!this.attackplayerPos) {
-            this.attackplayerPos = this.state.player1.position;
+        if (!this.attackplayer) {
+            const players = [
+                    this.state.player1,
+                    this.state.player2
+                ]
+            if (!this.lastScorer) {
+                this.attackplayer = players.find((player) => player.id === this.firstAttacker);
+            } else {
+                this.attackplayer = players.find(player => player.id === this.lastScorer);
+            }
         }
         if (this.state.puck.vx !== 0) {
             this.state.puck = initPuck(this.settings);
         }
-        this.movingStep(deltaTime);
+        this.MovingStepNoCollision(deltaTime);
                 
-        if (this.state.puck.y >= (this.attackplayerPos + (0.5 * this.settings.paddle.height))) {
+        if (this.state.puck.y >= (this.attackplayer.position + (0.5 * this.settings.paddle.height))) {
             
-            this.state.puck.vx = this.settings.puck.defaultSpeed;
+            this.state.puck.vx = this.attackplayer.id === this.state.player1.id
+                                         ? this.settings.puck.defaultSpeed
+                                         : this.settings.puck.defaultSpeed * -1;
             this.state.puck.vy = 0;
-            this.attackplayerPos = null;
-            this.state.phase = GAMEPHASE.playing;
-        }
+            this.attackplayer = null;
+            this.lastScorer = null;
+            this.state.phase = GAMEPHASE.playing;                 
+        }   
 
     }
 
@@ -95,7 +113,35 @@ export class Engine {
         this.movingStep(deltaTime);
     }
 
+    goalStep(deltaTime) {
+        if(!hasPuckReachEndOfGoal(this.state.puck, this.settings)) return this.MovingStepNoCollision(deltaTime);
+        this.MovePaddles();
+        if (this.suspendedAnimation === null) {
+            this.suspendedAnimation = 0;
+        }else if (this.suspendedAnimation < 3) {
+            this.suspendedAnimation += deltaTime;
+        } else {
+            this.suspendedAnimation = null;
+            this.lastScorer = this.state.puck.vx > 0 ?
+                                this.state.player1.id
+                                : this.state.player2.id
+            this.state.phase = GAMEPHASE.faceOff;
+        }
+
+        
+    }
+
     movingStep(deltaTime) {
+        this.MovePaddles();
+        this.state.puck = puckStep(this.state, deltaTime, this.settings);
+    }
+
+    MovingStepNoCollision(deltaTime) {
+        this.MovePaddles();
+        this.state.puck = simplePuckStep(this.state, deltaTime, this.settings.puck.speedCoeff);
+    }
+
+    MovePaddles() {
         this.state.player1.position = paddleStep(
             this.state.player1.position, 
             this.keys.z,
@@ -108,7 +154,6 @@ export class Engine {
             this.keys.down,
             this.settings
         );
-        this.state.puck = puckStep(this.state, deltaTime, this.settings);
     }
     
     handleKeyDown= (e) => {
