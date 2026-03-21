@@ -23,8 +23,8 @@ function Game() {
     return(
         <div className="gameContainer">
         <ScoreBoard 
-            p1Score={gameState.player1.score} 
-            p2Score={gameState.player2.score}
+            p1Score={gameState.player1.goals.length} 
+            p2Score={gameState.player2.goals.length}
             time={gameState.time}
             period={gameState.period}
         />

@@ -1,3 +1,5 @@
+import { GAMEPHASE } from "../../engine/constants/gamePhase";
+
 export const puckStep = (game, deltaTime, settings) => {
     let nextPuck = game.puck;
     const player1 = game.player1.position;
@@ -8,7 +10,7 @@ export const puckStep = (game, deltaTime, settings) => {
                         settings.goal.depth, 
                         settings.goal.size - settings.goal.postWidth
                     );
-    const goalRight = makeRect(100 - settings.goal.backGap,
+    const goalRight = makeRect(100 - settings.goal.backGap - settings.goal.depth,
                         50 - (settings.goal.size / 2) + settings.goal.postWidth,
                         settings.goal.depth, 
                         settings.goal.size - settings.goal.postWidth
@@ -16,6 +18,7 @@ export const puckStep = (game, deltaTime, settings) => {
 
     nextPuck = step(nextPuck, deltaTime, settings.puck.speedcoeff);
     nextPuck = handleCollision(nextPuck, player1, player2, settings);
+    handleGoal(makePuckRectangle(nextPuck), goalLeft, goalRight, game);
 
 
     return nextPuck;
@@ -46,7 +49,7 @@ const intersection= (rectA, rectB) => rectA.right >= rectB.left
                                 && rectA.top <= rectB.bottom
                                 && rectA.bottom >= rectB.top;
 const contains = (outer, inner) => inner.left >= outer.left
-                                && inner.right <= outer.left
+                                && inner.right <= outer.right
                                 && inner.top >= outer.top
                                 && inner.bottom <= outer.bottom;
 
@@ -202,12 +205,12 @@ const handleCollision = (nextPuck, player1, player2, settings) => {
     return nextPuck;
 };
 
-const handleGoal = (nextPuck, goalLeft, goalRight, game) => {
-    if (contains(nextPuck, goalLeft)) {
-
-    }else if (contains(nextPuck, goalRight)) {
-
+const handleGoal = (puckRect, goalLeft, goalRight, game) => {   
+    if (contains(goalLeft, puckRect)) {
+        game.player2.goals.push(game.time);
+        game.phase = GAMEPHASE.goal;
+    }else if (contains(goalRight, puckRect)) {
+        game.player1.goals.push(game.time);
+        game.phase = GAMEPHASE.goal;
     }
-
-    return nextPuck;
 }

@@ -12,11 +12,11 @@ export class Engine {
                 period: 1,
                 time: 0,
                 player1: {
-                    score: 0,
+                    goals: [],
                     position: 50 - (0.5 * settings.paddle.height)
                 },
                 player2: {
-                    score: 0,
+                    goals: [],
                     position: 50 - (0.5 * settings.paddle.height)
                 },
                 puck: initPuck(settings)
@@ -108,7 +108,7 @@ export class Engine {
             this.keys.down,
             this.settings
         );
-        this.state.puck = puckStep(this.state,deltaTime, this.settings);
+        this.state.puck = puckStep(this.state, deltaTime, this.settings);
     }
     
     handleKeyDown= (e) => {
