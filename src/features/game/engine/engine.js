@@ -83,12 +83,9 @@ export class Engine {
             const players = [
                     this.state.player1,
                     this.state.player2
-                ]
-            if (!this.lastScorer) {
-                this.attackplayer = players.find((player) => player.id === this.firstAttacker);
-            } else {
-                this.attackplayer = players.find(player => player.id === this.lastScorer);
-            }
+                ];
+            const targetId = this.lastScorer ?? this.firstAttacker;
+            this.attackplayer = players.find(player => player.id === targetId);
         }
         if (this.state.puck.vx !== 0) {
             this.state.puck = initPuck(this.settings);
