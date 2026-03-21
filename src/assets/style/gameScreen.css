@@ -1,0 +1,5 @@
+.gameContainer{
+    height: 100vh;
+    display: grid;
+    grid-template-rows: 12% 1fr;
+}

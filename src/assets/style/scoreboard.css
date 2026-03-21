@@ -1,0 +1,49 @@
+.scoreBoard {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100vw;
+    grid-row: 1 / 2;
+    text-align: center;
+
+}
+.teamContainer {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.8em;
+}
+
+.teamName{
+    font-weight: bold;
+    font-size: 1.2em;
+}
+.playerScore {
+    font-weight: bold;
+    font-size: 1.5em;
+    background-color: #FFF;
+    color: #000;
+    width: 100%;
+}
+.timeBox {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5em;
+}
+.time {
+    background-color: #FFF;
+    color: #000;
+    font-size: 1.5em;
+    font-weight: 600;
+    width: 2em;
+}
+.period {
+    background-color: #FFF;
+    color: #6b201f;
+    font-size: 1.3;
+}

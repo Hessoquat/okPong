@@ -12,11 +12,11 @@ export class Engine {
                 period: 1,
                 time: 0,
                 player1: {
-                    goals: 0,
+                    score: 0,
                     position: 50 - (0.5 * settings.paddle.height)
                 },
                 player2: {
-                    goals: 0,
+                    score: 0,
                     position: 50 - (0.5 * settings.paddle.height)
                 },
                 puck: initPuck(settings)
