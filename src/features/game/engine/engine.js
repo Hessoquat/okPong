@@ -75,6 +75,8 @@ export class Engine {
             case GAMEPHASE.goal:
                 this.goalStep(deltaTime);
                 break;
+            case GAMEPHASE.timeout:
+                this.timeoutStep(deltaTime);
         }
     }
 
@@ -108,6 +110,10 @@ export class Engine {
     playingStep(deltaTime) {
         this.state.time += deltaTime;
         this.movingStep(deltaTime);
+
+        if (this.isTimeOut()) {
+            this.state.phase = GAMEPHASE.timeout;
+        }
     }
 
     goalStep(deltaTime) {
@@ -124,8 +130,21 @@ export class Engine {
                                 : this.state.player2.id
             this.state.phase = GAMEPHASE.faceOff;
         }
+    }
 
-        
+    timeoutStep(deltaTime) {
+        if (this.suspendedAnimation === null) {
+            this.suspendedAnimation = 0;
+            return;
+        }
+
+        if (this.suspendedAnimation <= 2) {
+            this.suspendedAnimation += deltaTime;
+            return;
+        }
+
+        this.state.phase= GAMEPHASE.break;
+        this.running = false;
     }
 
     movingStep(deltaTime) {
@@ -152,6 +171,19 @@ export class Engine {
             this.settings
         );
     }
+
+    isTimeOut() {
+        return (this.state.time >= 20 && this.state.period === 1)
+            || (this.state.time >= 40 && this.state.period === 2)
+            || (this.state.time >=60 && this.state.player1.goals.length !== this.state.player2.goals.length);
+    }
+
+    nextPeriod() {
+        this.state.phase = GAMEPHASE.faceOff;
+        this.state.period +=1;
+        this.running = true;
+        requestAnimationFrame(this.loop);
+    }
     
     handleKeyDown= (e) => {
         if(e.code === 'KeyW') {
@@ -170,6 +202,8 @@ export class Engine {
             && (this.state.phase === GAMEPHASE.playing || this.state.phase === GAMEPHASE.pause)
             ) {
                 this.state.phase = this.state.phase === GAMEPHASE.playing ? GAMEPHASE.pause : GAMEPHASE.playing ;
+        }else if (e.code === 'Space' && this.state.phase === GAMEPHASE.break) {
+            this.nextPeriod();
         }
     }
 

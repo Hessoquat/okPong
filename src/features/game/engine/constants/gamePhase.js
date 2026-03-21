@@ -3,5 +3,6 @@ export const GAMEPHASE = {
     "playing": 1,
     "goal": 2,
     "timeout": 3,
-    "pause": 4
+    "break": 4,
+    "pause": 5
 }
