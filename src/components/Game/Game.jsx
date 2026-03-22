@@ -23,7 +23,12 @@ function Game() {
 
     if (!gameState) return <h1>loading</h1>;
     if (gameState.phase === GAMEPHASE.intermission) 
-        return <Intermission player1={gameState.player1} player2={gameState.player2} period={gameState.period} />;
+        return <Intermission 
+            player1={gameState.player1} 
+            player2={gameState.player2} 
+            period={gameState.period}
+            settings= {settings}
+            />;
 
     return(
         <div className="gameContainer">

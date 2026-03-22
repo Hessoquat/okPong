@@ -24,5 +24,9 @@ export const settings= {
         postWidth: 1,
         postDeflectionCoeff: 1,
         backGap: 0
+    },
+    time: {
+        nbPeriods: 3,
+        periodLength: 20
     }
 }
