@@ -1,7 +1,8 @@
-import { GAMEPHASE } from "./constants/gamePhase";
+import { GAMEPHASE } from "../../../constants/game/gamePhase";
 import { initPuck } from "../factories/puckFactory";
 import { paddleStep } from "../physics/paddle/paddle";
 import { hasPuckReachEndOfGoal, puckStep, simplePuckStep } from "../physics/puck/puck";
+import { PlayersInputs } from "./inputs/playersInputs";
 
 export class Engine {
     constructor(settings, onUpdate) {
@@ -23,20 +24,21 @@ export class Engine {
                 },
                 puck: initPuck(settings)
             };
-        this.keys = {z: false, s: false, up: false, down: false};
+        this.inputs = new PlayersInputs(this.onSpacePress.bind(this));
         this.running = false;
         this.lastTime = null;
         this.firstAttacker = this.state.player1.id;
         this.attackplayer= null;
         this.suspendedAnimation = null;
         this.lastScorer = null;
+        this.lastPhase = null;
+
         this.loop = this.loop.bind(this);
+        this.nextPeriod = this.nextPeriod.bind(this);
     }
 
     start() {
         if(this.running) return;
-        document.addEventListener('keydown', this.handleKeyDown);
-        document.addEventListener('keyup', this.handleKeyUp);
 
         this.running = true;
         this.lastTime = null;
@@ -45,13 +47,12 @@ export class Engine {
 
     stop() {
         this.running= false;
-        document.removeEventListener('keydown', this.handleKeyDown)
-        document.removeEventListener('keyup', this.handleKeyUp);
+        this.inputs.removeListeners();
     }
 
     loop(time) {
         if (!this.running) return;
-        
+
         if (this.lastTime === null) this.lastTime = time;
         const deltaTime = (time - this.lastTime) / 1000;
         this.lastTime = time;
@@ -65,6 +66,8 @@ export class Engine {
     }
 
     step(deltaTime) {
+        if (this.state.phase === GAMEPHASE.pause) return;
+        
         switch (this.state.phase) {
             case GAMEPHASE.faceOff:
                 this.faceOffStep(deltaTime);
@@ -163,16 +166,18 @@ export class Engine {
     }
 
     MovePaddles() {
+        const {player1, player2} = this.inputs.getplayersInput();
+
         this.state.player1.position = paddleStep(
             this.state.player1.position, 
-            this.keys.z,
-            this.keys.s,
+            player1.up,
+            player1.down,
             this.settings
         );
         this.state.player2.position = paddleStep(
             this.state.player2.position, 
-            this.keys.up,
-            this.keys.down,
+            player2.up,
+            player2.down,
             this.settings
         );
     }
@@ -184,47 +189,28 @@ export class Engine {
     }
 
     nextPeriod() {
+        if (this.state.phase !== GAMEPHASE.intermission) return;
         this.state.phase = GAMEPHASE.faceOff;
         this.state.period +=1;
         this.running = true;
         requestAnimationFrame(this.loop);
     }
-    
-    handleKeyDown= (e) => {
-        if(e.code === 'KeyW') {
-            this.keys.z = true;
-            return;
-        }
-        else if (e.code === 'KeyS') {
-            this.keys.s = true;
-            return;
-        } else if (e.code === 'ArrowUp') {
-            this.keys.up = true;
-            return;
-        }else if (e.code === 'ArrowDown') {
-            this.keys.down= true;
-        } else if (e.code === 'Space' 
-            && (this.state.phase === GAMEPHASE.playing || this.state.phase === GAMEPHASE.pause)
-            ) {
-                this.state.phase = this.state.phase === GAMEPHASE.playing ? GAMEPHASE.pause : GAMEPHASE.playing ;
-        }else if (e.code === 'Space' && this.state.phase === GAMEPHASE.intermission) {
-            this.nextPeriod();
-        }
-    }
 
-    handleKeyUp = (e) => {
-        if(e.code === 'KeyW') {
-            this.keys.z = false;
+    onSpacePress() {
+        if (this.state.phase === GAMEPHASE.goal || this.state.phase === GAMEPHASE.timeUp) return;
+        if (this.state.phase === GAMEPHASE.intermission) {
+            this.nextPeriod();
+            return;
+        };
+        if (this.state.phase !== GAMEPHASE.pause) {
+            this.lastPhase = this.state.phase;
+            this.state.phase = GAMEPHASE.pause;
             return;
         }
-        else if (e.code === 'KeyS') {
-            this.keys.s = false;
-            return;
-        } else if (e.code === 'ArrowUp') {
-            this.keys.up = false;
-            return;
-        }else if (e.code === 'ArrowDown') {
-            this.keys.down= false;
+        
+        if(this.lastPhase){
+            this.state.phase = this.lastPhase;
+            this.lastPhase = null;
         }
     }
 }

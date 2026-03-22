@@ -1,4 +1,7 @@
+import { GAMEMODE } from "../../../constants/game/gameMode";
+
 export const settings= {
+    mode: GAMEMODE.solo,
     player1: {
         defensePos: 8,
         attackPos: 78

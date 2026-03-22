@@ -1,6 +1,11 @@
 .intermissionScreen{
+    display: grid;
+    grid-template-rows: 90vh 10vh;
     width: 100%;
     text-align: center;
+}
+.gameData{
+    grid-row: 1/2;
 }
 .goals{
     width: 25%;
@@ -11,4 +16,8 @@
 }
 .p2Goal{
     text-align: right;
+}
+
+.intermissionButtons{
+    grid-row: 2/3;
 }

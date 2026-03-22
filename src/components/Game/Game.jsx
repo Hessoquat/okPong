@@ -6,7 +6,7 @@ import ScoreBoard from "./scoreBoard";
 import "../../assets/style/scoreBoard.css";
 import '../../assets/style/field.css';
 import '../../assets/style/gameScreen.css';
-import { GAMEPHASE } from "../../features/game/engine/constants/gamePhase";
+import { GAMEPHASE } from "../../constants/game/gamePhase";
 import Intermission from "./Intermission";
 
 function Game() {
@@ -27,6 +27,7 @@ function Game() {
             player1={gameState.player1} 
             player2={gameState.player2} 
             period={gameState.period}
+            onNext={engineRef.current.nextPeriod}
             settings= {settings}
             />;
 
