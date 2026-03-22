@@ -89,12 +89,14 @@ export class Engine {
             const targetId = this.lastScorer ?? this.firstAttacker;
             this.attackplayer = players.find(player => player.id === targetId);
         }
+
         if (this.state.puck.vx !== 0) {
             this.state.puck = initPuck(this.settings);
         }
+
         this.MovingStepNoCollision(deltaTime);
                 
-        if (this.state.puck.y >= (this.attackplayer.position + (0.5 * this.settings.paddle.height))) {
+        if ((this.state.puck.y + (0.5 * this.state.puck.size)) >= (this.attackplayer.position + (0.5 * this.settings.paddle.height))) {
             
             this.state.puck.vx = this.attackplayer.id === this.state.player1.id
                                          ? this.settings.puck.defaultSpeed
@@ -144,6 +146,9 @@ export class Engine {
         }
 
         this.state.phase= GAMEPHASE.break;
+        this.lastTime = null;
+        this.state.player1.position = 50 - (0.5 * this.settings.paddle.height);
+        this.state.player2.position = 50 - (0.5 * this.settings.paddle.height);
         this.running = false;
     }
 
