@@ -7,7 +7,7 @@ import "../../assets/style/scoreBoard.css";
 import '../../assets/style/field.css';
 import '../../assets/style/gameScreen.css';
 import { GAMEPHASE } from "../../features/game/engine/constants/gamePhase";
-import TimeOut from "./TimeOut";
+import Intermission from "./Intermission";
 
 function Game() {
     const engineRef= useRef();
@@ -22,8 +22,8 @@ function Game() {
     }, [])
 
     if (!gameState) return <h1>loading</h1>;
-    if (gameState.phase === GAMEPHASE.break) 
-        return <TimeOut player1={gameState.player1} player2={gameState.player2} />;
+    if (gameState.phase === GAMEPHASE.intermission) 
+        return <Intermission player1={gameState.player1} player2={gameState.player2} period={gameState.period} />;
 
     return(
         <div className="gameContainer">

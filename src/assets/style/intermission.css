@@ -1,0 +1,14 @@
+.intermissionScreen{
+    width: 100%;
+    text-align: center;
+}
+.goals{
+    width: 25%;
+    margin: auto;
+}
+.p1Goal{
+    text-align: left;
+}
+.p2Goal{
+    text-align: right;
+}

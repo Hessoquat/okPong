@@ -75,8 +75,8 @@ export class Engine {
             case GAMEPHASE.goal:
                 this.goalStep(deltaTime);
                 break;
-            case GAMEPHASE.timeout:
-                this.timeoutStep(deltaTime);
+            case GAMEPHASE.timeUp:
+                this.timeUpStep(deltaTime);
         }
     }
 
@@ -113,8 +113,8 @@ export class Engine {
         this.state.time += deltaTime;
         this.movingStep(deltaTime);
 
-        if (this.isTimeOut()) {
-            this.state.phase = GAMEPHASE.timeout;
+        if (this.isTimeUp()) {
+            this.state.phase = GAMEPHASE.timeUp;
         }
     }
 
@@ -134,7 +134,7 @@ export class Engine {
         }
     }
 
-    timeoutStep(deltaTime) {
+    timeUpStep(deltaTime) {
         if (this.suspendedAnimation === null) {
             this.suspendedAnimation = 0;
             return;
@@ -145,7 +145,7 @@ export class Engine {
             return;
         }
 
-        this.state.phase= GAMEPHASE.break;
+        this.state.phase= GAMEPHASE.intermission;
         this.lastTime = null;
         this.state.player1.position = 50 - (0.5 * this.settings.paddle.height);
         this.state.player2.position = 50 - (0.5 * this.settings.paddle.height);
@@ -177,7 +177,7 @@ export class Engine {
         );
     }
 
-    isTimeOut() {
+    isTimeUp() {
         return (this.state.time >= 20 && this.state.period === 1)
             || (this.state.time >= 40 && this.state.period === 2)
             || (this.state.time >=60 && this.state.player1.goals.length !== this.state.player2.goals.length);
@@ -207,7 +207,7 @@ export class Engine {
             && (this.state.phase === GAMEPHASE.playing || this.state.phase === GAMEPHASE.pause)
             ) {
                 this.state.phase = this.state.phase === GAMEPHASE.playing ? GAMEPHASE.pause : GAMEPHASE.playing ;
-        }else if (e.code === 'Space' && this.state.phase === GAMEPHASE.break) {
+        }else if (e.code === 'Space' && this.state.phase === GAMEPHASE.intermission) {
             this.nextPeriod();
         }
     }
