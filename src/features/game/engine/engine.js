@@ -2,10 +2,10 @@ import { GAMEPHASE } from "../../../constants/game/gamePhase";
 import { initPuck } from "../factories/puckFactory";
 import { paddleStep } from "../physics/paddle/paddle";
 import { hasPuckReachEndOfGoal, puckStep, simplePuckStep } from "../physics/puck/puck";
-import { PlayersInputs } from "./inputs/playersInputs";
+import { InputManager } from "./inputs/inputManager";
 
 export class Engine {
-    constructor(settings, onUpdate) {
+    constructor(settings, onUpdate, inputManager) {
         this.settings = settings;
         this.onUpdate= onUpdate;
         this.state = {
@@ -24,7 +24,7 @@ export class Engine {
                 },
                 puck: initPuck(settings)
             };
-        this.inputs = new PlayersInputs(this.onSpacePress.bind(this));
+        this.inputs = inputManager;
         this.running = false;
         this.lastTime = null;
         this.firstAttacker = this.state.player1.id;
@@ -47,15 +47,17 @@ export class Engine {
 
     stop() {
         this.running= false;
-        this.inputs.removeListeners();
+        this.inputs.systemInput.destroy();
     }
 
     loop(time) {
+
         if (!this.running) return;
 
         if (this.lastTime === null) this.lastTime = time;
         const deltaTime = (time - this.lastTime) / 1000;
         this.lastTime = time;
+        this.inputs.update();
         this.step(deltaTime);
         this.onUpdate(this.getSnapshot());
         requestAnimationFrame(this.loop);
@@ -66,8 +68,11 @@ export class Engine {
     }
 
     step(deltaTime) {
-        if (this.state.phase === GAMEPHASE.pause) return;
+        if (this.inputs.getPausePressed()) this.onSpacePress();
         
+        if (this.state.phase === GAMEPHASE.pause 
+            || this.state.phase === GAMEPHASE.intermission) return;
+
         switch (this.state.phase) {
             case GAMEPHASE.faceOff:
                 this.faceOffStep(deltaTime);
@@ -166,7 +171,7 @@ export class Engine {
     }
 
     MovePaddles() {
-        const {player1, player2} = this.inputs.getplayersInput();
+        const {player1, player2} = this.inputs.getPlayers();
 
         this.state.player1.position = paddleStep(
             this.state.player1.position, 

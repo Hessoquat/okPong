@@ -1,4 +1,6 @@
 export const GAMEMODE = {
-    multi: 0,
-    solo: 1
+    playerVsPlayer: 0,
+    playerVsComputer: 1,
+    computerVsPlayer: 2,
+    computerVsComputer: 3
 }

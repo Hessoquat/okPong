@@ -8,17 +8,24 @@ import '../../assets/style/field.css';
 import '../../assets/style/gameScreen.css';
 import { GAMEPHASE } from "../../constants/game/gamePhase";
 import Intermission from "./Intermission";
+import { SystemInput } from "../../features/game/engine/inputs/systemInput";
+import { EngineFactory } from "../../features/game/factories/engineFactory";
+import { GAMEMODE } from "../../constants/game/gameMode";
+
 
 function Game() {
     const engineRef= useRef();
     const [gameState, setGameState] = useState(null);
 
     useEffect(()=> {
-        const engine = new Engine(settings, (state) => setGameState({...state}));
+        const engine = EngineFactory.createEngine(
+            settings, 
+            (state) => setGameState({...state}),
+            GAMEMODE.playerVsPlayer);
         engineRef.current = engine;
         engine.start();
 
-        return() => engine.stop();
+        return () => engine.stop();
     }, [])
 
     if (!gameState) return <h1>loading</h1>;

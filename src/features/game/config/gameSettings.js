@@ -19,7 +19,7 @@ export const settings= {
         defaultSpeed: 1,
         YDeviationCoeff: 2,
         size: 1,
-        speedCoeff: 75
+        speedCoeff: 70
     },
     goal: {
         size: 30,
