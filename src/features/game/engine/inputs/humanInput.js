@@ -4,6 +4,10 @@ export class HumanInput {
         this.keymap = keymap;
     }
 
+    update(gameState, dt) {
+
+    }
+
     getState() {
         const snapshot = this.systemInput.getSnapshot();
         return {
