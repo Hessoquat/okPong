@@ -57,7 +57,7 @@ export class Engine {
         if (this.lastTime === null) this.lastTime = time;
         const deltaTime = (time - this.lastTime) / 1000;
         this.lastTime = time;
-        this.inputs.update();
+        this.inputs.update(this.state, deltaTime, this.settings);
         this.step(deltaTime);
         this.onUpdate(this.getSnapshot());
         requestAnimationFrame(this.loop);

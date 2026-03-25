@@ -18,13 +18,13 @@ export class EngineFactory{
             player2= new HumanInput(systemInput, PLAYER_KEYMAP.arrowMap);
         }else if (mode === GAMEMODE.playerVsComputer) {
             player1 = new HumanInput(systemInput, PLAYER_KEYMAP.arrowMap);
-            player2= new AIInput();
+            player2= new AIInput(false);
         } else if (mode === GAMEMODE.computerVsPlayer) {
-            player1 = new AIInput();
+            player1 = new AIInput(true);
             player2= new HumanInput(systemInput, PLAYER_KEYMAP.arrowMap);
         }else if (mode === GAMEMODE.computerVsComputer) {
-            player1 = new AIInput();
-            player2= new AIInput();
+            player1 = new AIInput(true);
+            player2= new AIInput(false);
         } else throw new Error('unknown gameMode');
 
         inputManager= new InputManager(systemInput, player1, player2);

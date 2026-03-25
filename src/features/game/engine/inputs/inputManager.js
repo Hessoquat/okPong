@@ -7,9 +7,11 @@ export class InputManager {
         this.current = {};
     }
 
-    update() {
+    update(gameState, dt, settings) {
         this.prev = this.current;
         this.current= this.systemInput.getSnapshot();
+        this.player1.update(gameState, dt, settings);
+        this.player2.update(gameState, dt, settings);
     }
 
     getPlayer1() {
