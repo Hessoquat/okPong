@@ -57,7 +57,7 @@ export class Engine {
         if (this.lastTime === null) this.lastTime = time;
         const deltaTime = (time - this.lastTime) / 1000;
         this.lastTime = time;
-        this.inputs.update(this.state, deltaTime, this.settings);
+        this.inputs.update(this.getSnapshot(), deltaTime, this.settings);
         this.step(deltaTime);
         this.onUpdate(this.getSnapshot());
         requestAnimationFrame(this.loop);
@@ -188,9 +188,9 @@ export class Engine {
     }
 
     isTimeUp() {
-        return (this.state.time >= 20 && this.state.period === 1)
-            || (this.state.time >= 40 && this.state.period === 2)
-            || (this.state.time >=60 && this.state.player1.goals.length !== this.state.player2.goals.length);
+        return (this.state.time >= (this.settings.time.periodLength * this.state.period)
+        && !(this.state.period === this.settings.time.nbPeriods
+            && this.state.player1.goals.length === this.state.player2.goals.length));
     }
 
     nextPeriod() {

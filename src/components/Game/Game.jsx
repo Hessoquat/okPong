@@ -21,7 +21,9 @@ function Game() {
         const engine = EngineFactory.createEngine(
             settings, 
             (state) => setGameState({...state}),
-            GAMEMODE.computerVsPlayer);
+            GAMEMODE.computerVsPlayer,
+            {defense: 0, attack: 100}
+        );
         engineRef.current = engine;
         engine.start();
 

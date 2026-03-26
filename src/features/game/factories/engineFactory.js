@@ -7,7 +7,7 @@ import { InputManager } from "../engine/inputs/inputManager";
 import { SystemInput } from "../engine/inputs/systemInput";
 
 export class EngineFactory{
-    static createEngine(settings, onUpdate, mode) {
+    static createEngine(settings, onUpdate, mode, ia1Level = {defense: 50, attack: 50}, ia2Level = {defense: 50, attack: 50}) {
         let inputManager;
         const systemInput = new SystemInput();
         let player1;
@@ -18,13 +18,13 @@ export class EngineFactory{
             player2= new HumanInput(systemInput, PLAYER_KEYMAP.arrowMap);
         }else if (mode === GAMEMODE.playerVsComputer) {
             player1 = new HumanInput(systemInput, PLAYER_KEYMAP.arrowMap);
-            player2= new AIInput(false);
+            player2= new AIInput(false, ia1Level.defense, ia1Level.attack);
         } else if (mode === GAMEMODE.computerVsPlayer) {
-            player1 = new AIInput(true);
+            player1 = new AIInput(true, ia1Level.defense, ia1Level.attack);
             player2= new HumanInput(systemInput, PLAYER_KEYMAP.arrowMap);
         }else if (mode === GAMEMODE.computerVsComputer) {
-            player1 = new AIInput(true);
-            player2= new AIInput(false);
+            player1 = new AIInput(true, ia1Level.defense, ia1Level.attack);
+            player2= new AIInput(false, ia2Level.defense, ia2Level.attack);
         } else throw new Error('unknown gameMode');
 
         inputManager= new InputManager(systemInput, player1, player2);
