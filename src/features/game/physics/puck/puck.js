@@ -101,16 +101,16 @@ const handleBorderCollision =(nextPuck) => {
     return {x, y, vx, vy, size}
 }
 
-const handlePaddleCollision = (player1, player2, nextPuck, puckRect, settings) => {
+const handlePaddleCollision = (player1top, player2top, nextPuck, puckRect, settings) => {
     const player1Defense = makeRect(
         settings.player1.defensePos, 
-        player1, 
+        player1top, 
         settings.paddle.width, 
         settings.paddle.height);
 
     const player1Attack = makeRect(
         settings.player1.attackPos,
-        player1,
+        player1top,
         settings.paddle.width,
         settings.paddle.height
     );
@@ -119,7 +119,7 @@ const handlePaddleCollision = (player1, player2, nextPuck, puckRect, settings) =
 
     if (hasHitPlayer1X) {       
         
-        const impact = (puckRect.center - player1)/ settings.paddle.height - 0.5;
+        const impact = YDeflection(player1Attack, puckRect, settings.puck.YDeviationCoeff);
         nextPuck.vx = puckRect.isGoingRight ? nextPuck.vx : nextPuck.vx * -1;
         nextPuck.vy= impact * settings.puck.YDeviationCoeff;
 
@@ -128,14 +128,14 @@ const handlePaddleCollision = (player1, player2, nextPuck, puckRect, settings) =
                 
     const player2Defense = makeRect(
         settings.player2.defensePos,
-        player2,
+        player2top,
         settings.paddle.width,
         settings.paddle.height
     );
 
     const player2Attack = makeRect(
         settings.player2.attackPos,
-        player2,
+        player2top,
         settings.paddle.width,
         settings.paddle.height
     )
@@ -143,10 +143,10 @@ const handlePaddleCollision = (player1, player2, nextPuck, puckRect, settings) =
     const hasHitPlayer2X = intersection(player2Defense, puckRect) || intersection(player2Attack, puckRect);
 
     if (hasHitPlayer2X) {
-        const impact = (puckRect.center - player2)/ settings.paddle.height - 0.5;
+        const impact = YDeflection(player2Attack, puckRect, settings.puck.YDeviationCoeff);
         nextPuck.vx = puckRect.isGoingRight ? nextPuck.vx * -1: nextPuck.vx;
         nextPuck.vy= impact * settings.puck.YDeviationCoeff;
-            return nextPuck;
+        return nextPuck;
     }
     return nextPuck;
 }
@@ -197,7 +197,7 @@ const handleGoalCollision = (nextPuck, puckRect, settings) => {
 
         if(isXAxisCollision(post, puckRect)) {
             nextPuck.vx *= -1;
-            nextPuck.vy += postDeflection(post, puckRect, settings);
+            nextPuck.vy += YDeflection(post, puckRect, settings.goal.postDeflectionCoeff);
         }else {
             nextPuck.vy *= -1; 
         }
@@ -216,11 +216,13 @@ const isXAxisCollision = (post, puck) => {
     const minOverlapY = Math.min(overlapBottom, overlapTop);
     return minOverlapX < minOverlapY;
 }
-const postDeflection = (post, puck, settings) => {
-    const postCenter = (post.top + post.bottom)/2;
-    const halfHeight = (post.bottom - post.top)/2;
-    const impact = (puck.center - postCenter)/halfHeight;
-    return impact * settings.goal.postDeflectionCoeff;
+const YDeflection = (collidedRect, puck, deflectionCoeff) => {
+    const collidedRectCenter = (collidedRect.top + collidedRect.bottom)/2;
+    const halfHeight = (collidedRect.bottom - collidedRect.top)/2;
+    let impact = (puck.center - collidedRectCenter)/halfHeight;
+    impact = Math.max(-1, Math.min(1, impact));
+    impact=  Math.sign(impact) * Math.pow(Math.abs(impact), 1.25);
+    return impact * deflectionCoeff;
 }
 
 const handleGoal = (puckRect, goalLeft, goalRight, game) => {   

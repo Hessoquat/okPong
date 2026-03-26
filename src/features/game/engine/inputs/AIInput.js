@@ -45,7 +45,7 @@ export class AIInput{
     }
 
     isReactionTimeUp(gameState) {
-        const puckOnMySide =
+    const puckOnMySide =
         (this.isP1 && gameState.puck.x <= 50) ||
         (!this.isP1 && gameState.puck.x > 50);
 
@@ -54,6 +54,14 @@ export class AIInput{
         : this.attackReactionTime;
 
     return this.timer >= reactionTime;
+    }
+
+    dynamiqueDefenseReactionTime(gameState) {
+        puckSpeedPenalty = this.computePuckSpeedPenalty(gameState.puck);
+    }
+
+    computePuckSpeedPenalty(puck) {
+        // const puckSpeed
     }
 
 
