@@ -94,7 +94,8 @@ export class Engine {
                     this.state.player1,
                     this.state.player2
                 ];
-            const targetId = this.lastScorer ?? this.firstAttacker;
+                console.log(this.state.period % 2)
+            const targetId = this.lastScorer ?? (this.state.period % 2 !== 0 ? this.firstAttacker : [this.state.player1.id, this.state.player2.id].find(id => id !== this.firstAttacker));
             this.attackplayer = players.find(player => player.id === targetId);
         }
 
