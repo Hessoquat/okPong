@@ -94,7 +94,6 @@ export class Engine {
                     this.state.player1,
                     this.state.player2
                 ];
-                console.log(this.state.period % 2)
             const targetId = this.lastScorer ?? (this.state.period % 2 !== 0 ? this.firstAttacker : [this.state.player1.id, this.state.player2.id].find(id => id !== this.firstAttacker));
             this.attackplayer = players.find(player => player.id === targetId);
         }
@@ -203,7 +202,11 @@ export class Engine {
     }
 
     onSpacePress() {
-        if (this.state.phase === GAMEPHASE.goal || this.state.phase === GAMEPHASE.timeUp) return;
+
+        if (this.state.phase === GAMEPHASE.goal 
+            || this.state.phase === GAMEPHASE.timeUp
+            || this.state.phase === GAMEPHASE.faceOff
+        ) return;
         if (this.state.phase === GAMEPHASE.intermission) {
             this.nextPeriod();
             return;
@@ -214,7 +217,7 @@ export class Engine {
             return;
         }
         
-        if(this.lastPhase){
+        if(this.lastPhase !== null){
             this.state.phase = this.lastPhase;
             this.lastPhase = null;
         }

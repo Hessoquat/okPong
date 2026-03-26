@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import '../../assets/style/intermission.css'
 function Intermission   ({player1, player2, period, onNext, settings}) {
     const periodsScores = [];
@@ -28,13 +29,24 @@ function Intermission   ({player1, player2, period, onNext, settings}) {
         allGoals.sort((a, b) => a.time > b.time);
     }
 
+    
+    const keyDown = e => {
+        if (e.code === 'Space') handleNext();
+    }
+
+
     const handleNext= () =>  {
-        
         if (period !== settings.time.nbPeriods) {
             onNext();
             return;
         }
     }
+
+    useEffect(() => {
+            document.addEventListener('keydown', keyDown);
+            return () => document.removeEventListener('keydown', keyDown);
+        }, []);
+
     sortPeriodsScore();
     sortGoalbyTime();
     return (

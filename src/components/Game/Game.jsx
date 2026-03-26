@@ -8,7 +8,6 @@ import '../../assets/style/field.css';
 import '../../assets/style/gameScreen.css';
 import { GAMEPHASE } from "../../constants/game/gamePhase";
 import Intermission from "./Intermission";
-import { SystemInput } from "../../features/game/engine/inputs/systemInput";
 import { EngineFactory } from "../../features/game/factories/engineFactory";
 import { GAMEMODE } from "../../constants/game/gameMode";
 
@@ -21,8 +20,8 @@ function Game() {
         const engine = EngineFactory.createEngine(
             settings, 
             (state) => setGameState({...state}),
-            GAMEMODE.computerVsPlayer,
-            {defense: 40, attack: 65}
+            GAMEMODE.playerVsComputer,
+            {defense: 100, attack: 30}
         );
         engineRef.current = engine;
         engine.start();
