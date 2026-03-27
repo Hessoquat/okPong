@@ -15,7 +15,7 @@ export class AIInput{
     }
 
     setReactionTime(level) {
-        const minReact = 0.02;
+        const minReact = 0.00;
         const maxReact = 0.35;
         return maxReact - level * (maxReact - minReact);
     }
@@ -42,6 +42,7 @@ export class AIInput{
         }else if (gameState.phase === GAMEPHASE.pause || gameState.phase === GAMEPHASE.timeUp){
             this.standStill();
         }
+        if(gameState.phase === GAMEPHASE.goal) {this.standStill()}
     }
 
     isReactionTimeUp(gameState) {
@@ -56,12 +57,20 @@ export class AIInput{
     return this.timer >= reactionTime;
     }
 
-    dynamiqueDefenseReactionTime(gameState) {
-        puckSpeedPenalty = this.computePuckSpeedPenalty(gameState.puck);
+    dynamiqueDefenseReactionTime(gameState, settings) {
+        puckSpeedPenalty = this.computePuckSpeedPenalty(gameState.puck, settings);
     }
 
-    computePuckSpeedPenalty(puck) {
-        // const puckSpeed
+    computePuckSpeedPenalty(puck, settings) {
+        const puckSpeed = Math.sqrt(puck.vx * puck.vx + puck.vy * puck.vy);
+        
+        const maxSpeed = this.computeMaxSpeed(puck, settings);
+        const normalizedPuckSpeed = (puckSpeed - 1) / (maxSpeed - 1);
+    }
+
+    computeMaxSpeed(puck, settings) {
+        const maxDeflection = Math.max(settings.puck.YDeviationCoeff, settings.goal.postDeflectionCoeff);
+        return Math.sqrt(settings.puck.defaultSpeed * settings.puck.defaultSpeed + maxDeflection * maxDeflection);
     }
 
 

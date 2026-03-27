@@ -21,7 +21,8 @@ function Game() {
             settings, 
             (state) => setGameState({...state}),
             GAMEMODE.playerVsComputer,
-            {defense: 100, attack: 30}
+            {defense: 100, attack: 100},
+            {defense: 100, attack: 100}
         );
         engineRef.current = engine;
         engine.start();

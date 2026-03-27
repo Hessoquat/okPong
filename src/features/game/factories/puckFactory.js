@@ -4,6 +4,7 @@ export function initPuck(settings) {
             y: 0 + (settings.puck.size / 2),
             vx: 0,
             vy: settings.puck.defaultSpeed,
-            size: settings.puck.size
-                }
+            size: settings.puck.size,
+            speed: settings.puck.speedCoeff
+            }
 }

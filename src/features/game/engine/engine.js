@@ -51,7 +51,7 @@ export class Engine {
     }
 
     loop(time) {
-
+        console.log(this.state.puck)
         if (!this.running) return;
 
         if (this.lastTime === null) this.lastTime = time;
@@ -167,7 +167,7 @@ export class Engine {
 
     MovingStepNoCollision(deltaTime) {
         this.MovePaddles();
-        this.state.puck = simplePuckStep(this.state, deltaTime, this.settings.puck.speedCoeff);
+        this.state.puck = simplePuckStep(this.state, deltaTime);
     }
 
     MovePaddles() {
