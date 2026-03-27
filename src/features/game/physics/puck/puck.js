@@ -61,7 +61,6 @@ export const puckStep = (game, deltaTime, settings) => {
     const goalLeft = makeGoalRect(settings, true);
     const goalRight = makeGoalRect(settings, false);
     
-    nextPuck= increaseSpeed(nextPuck, deltaTime, settings);
     nextPuck = step(nextPuck, deltaTime);
     nextPuck = handleCollision(nextPuck, player1, player2, settings);
     handleGoal(makePuckRectangle(nextPuck), goalLeft, goalRight, game);
@@ -72,12 +71,6 @@ export const puckStep = (game, deltaTime, settings) => {
 export const simplePuckStep = (game, deltaTime) => handleBorderCollision(
     step(game.puck, deltaTime)
 );
-
-const increaseSpeed = (puck, deltaTime, settings) => {
-    puck.speed += deltaTime;
-    puck.speed = Math.min(puck.speed, settings.puck.maxSpeed);
-    return puck;
-} 
 
 const handleCollision = (nextPuck, player1, player2, settings) => {
     const puckRect = makePuckRectangle(nextPuck);

@@ -51,7 +51,6 @@ export class Engine {
     }
 
     loop(time) {
-        console.log(this.state.puck)
         if (!this.running) return;
 
         if (this.lastTime === null) this.lastTime = time;
@@ -119,6 +118,7 @@ export class Engine {
 
     playingStep(deltaTime) {
         this.state.time += deltaTime;
+        this.increaseSpeed(deltaTime);
         this.movingStep(deltaTime);
 
         if (this.isTimeUp()) {
@@ -186,6 +186,12 @@ export class Engine {
             this.settings
         );
     }
+
+    increaseSpeed = (deltaTime) => {
+        const newSpeed = this.state.puck.speed + deltaTime;
+        this.state.puck.speed = Math.min(newSpeed, this.settings.puck.maxSpeed);
+} 
+
 
     isTimeUp() {
         return (this.state.time >= (this.settings.time.periodLength * this.state.period)

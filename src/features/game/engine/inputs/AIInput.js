@@ -9,13 +9,14 @@ export class AIInput{
         this.timer = 0;
         this.state= {up: false, down: false};
         this.isP1 = isP1;
+        this.maxSpeedReactionPenalty = 0.05;
     }
       normalizeLevel(value) {
         return Math.min(Math.max(value, 0), 100) / 100;
     }
 
     setReactionTime(level) {
-        const minReact = 0.00;
+        const minReact = 0.1;
         const maxReact = 0.35;
         return maxReact - level * (maxReact - minReact);
     }
@@ -26,7 +27,7 @@ export class AIInput{
     
     update(gameState, dt, settings) {
         this.timer += dt;
-        if (!this.isReactionTimeUp(gameState)) return;
+        if (!this.isReactionTimeUp(gameState, settings)) return;
         
         this.timer = 0;
 
@@ -45,7 +46,7 @@ export class AIInput{
         if(gameState.phase === GAMEPHASE.goal) {this.standStill()}
     }
 
-    isReactionTimeUp(gameState) {
+    isReactionTimeUp(gameState,settings) {
     const puckOnMySide =
         (this.isP1 && gameState.puck.x <= 50) ||
         (!this.isP1 && gameState.puck.x > 50);
@@ -53,24 +54,32 @@ export class AIInput{
     const reactionTime = puckOnMySide
         ? this.defenseReactionTime
         : this.attackReactionTime;
-
-    return this.timer >= reactionTime;
+    return this.timer >= this.dynamiqueReactionTime(reactionTime, gameState, settings);
     }
 
-    dynamiqueDefenseReactionTime(gameState, settings) {
-        puckSpeedPenalty = this.computePuckSpeedPenalty(gameState.puck, settings);
+    dynamiqueReactionTime(reactionTime, gameState, settings) {
+        const puckSpeedPenalty = this.computePuckSpeedStress(gameState.puck, settings);
+        return reactionTime + puckSpeedPenalty;
+
     }
 
-    computePuckSpeedPenalty(puck, settings) {
-        const puckSpeed = Math.sqrt(puck.vx * puck.vx + puck.vy * puck.vy);
+    computePuckSpeedStress(puck, settings) {
+        const puckSpeed = Math.hypot(puck.vx, puck.vy) * puck.speed;
         
-        const maxSpeed = this.computeMaxSpeed(puck, settings);
-        const normalizedPuckSpeed = (puckSpeed - 1) / (maxSpeed - 1);
+        const maxSpeed = this.computeMaxSpeed(settings);
+        const minSpeed = this.computeMinSpeed(settings)
+        let normalizedPuckSpeed = (puckSpeed - minSpeed) / (maxSpeed - minSpeed);
+        normalizedPuckSpeed = Math.max(0, Math.min(1, normalizedPuckSpeed));
+        return this.maxSpeedReactionPenalty * Math.pow(normalizedPuckSpeed, 0.5);
     }
 
-    computeMaxSpeed(puck, settings) {
+    computeMaxSpeed(settings) {
         const maxDeflection = Math.max(settings.puck.YDeviationCoeff, settings.goal.postDeflectionCoeff);
-        return Math.sqrt(settings.puck.defaultSpeed * settings.puck.defaultSpeed + maxDeflection * maxDeflection);
+        return Math.hypot(settings.puck.defaultSpeed, maxDeflection) * settings.puck.maxSpeed;
+    }
+
+    computeMinSpeed(settings) {
+        return settings.puck.defaultSpeed * settings.puck.speedCoeff
     }
 
 
