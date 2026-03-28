@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { settings } from "../../features/game/config/gameSettings";
-import { Engine } from "../../features/game/engine/engine";
 import Field from "./Field";
 import ScoreBoard from "./scoreBoard";
 import "../../assets/style/scoreBoard.css";
 import '../../assets/style/field.css';
 import '../../assets/style/gameScreen.css';
-import { GAMEPHASE } from "../../constants/game/gamePhase";
+import { GAMEPHASE } from "../../core/constants/game/gamePhase";
 import Intermission from "./Intermission";
 import { EngineFactory } from "../../features/game/factories/engineFactory";
-import { GAMEMODE } from "../../constants/game/gameMode";
+import { GAMEMODE } from "../../core/constants/game/gameMode";
 
 
 function Game() {

@@ -1,13 +1,13 @@
-import { GAMEPHASE } from "../../../constants/game/gamePhase";
+import { GAMEPHASE } from "../../../core/constants/game/gamePhase";
+import { deepFreeze } from "../../../core/guards/immuability";
 import { initPuck } from "../factories/puckFactory";
 import { paddleStep } from "../physics/paddle/paddle";
 import { hasPuckReachEndOfGoal, puckStep, simplePuckStep } from "../physics/puck/puck";
-import { InputManager } from "./inputs/inputManager";
 
 export class Engine {
     constructor(settings, onUpdate, inputManager) {
-        this.settings = settings;
-        this.onUpdate= onUpdate;
+        this.settings = deepFreeze(settings);
+        this.onUpdate = onUpdate;
         this.state = {
                 phase: GAMEPHASE.faceOff,
                 period: 1,
@@ -56,7 +56,7 @@ export class Engine {
         if (this.lastTime === null) this.lastTime = time;
         const deltaTime = (time - this.lastTime) / 1000;
         this.lastTime = time;
-        this.inputs.update(this.getSnapshot(), deltaTime, this.settings);
+        this.inputs.update(this.getSnapshot(), deltaTime);
         this.step(deltaTime);
         this.onUpdate(this.getSnapshot());
         requestAnimationFrame(this.loop);

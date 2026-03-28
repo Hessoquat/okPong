@@ -1,4 +1,4 @@
-import { GAMEMODE } from "../../../constants/game/gameMode";
+import { GAMEMODE } from "../../../core/constants/game/gameMode";
 
 export const settings= {
     mode: GAMEMODE.solo,

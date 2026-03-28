@@ -1,4 +1,4 @@
-import { GAMEPHASE } from "../../../../constants/game/gamePhase";
+import { GAMEPHASE } from "../../../../core/constants/game/gamePhase";
 
 const makeRect = (left, top, width, height) => ({
     left,
