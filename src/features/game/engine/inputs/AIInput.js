@@ -10,7 +10,7 @@ export class AIInput{
         this.state= {up: false, down: false};
         this.isP1 = isP1;
         this.maxSpeedReactionPenalty = 0.08;
-        this.maxScoreReactionPenalty = 0.08;
+        this.maxScoreDiffReactionPenalty = 0.08;
         this.settings= settings;
     }
       normalizeLevel(value) {
@@ -61,7 +61,8 @@ export class AIInput{
 
     dynamiqueReactionTime(reactionTime, gameState, isDefending) {
         const puckSpeedPenalty = this.computePuckSpeedStress(gameState.puck, isDefending);
-        return  reactionTime + puckSpeedPenalty;
+        const scoreDiffPenalty = this.computeScoreDiffStress(gameState);
+        return  reactionTime + puckSpeedPenalty + scoreDiffPenalty;
 
     }
 
@@ -83,6 +84,16 @@ export class AIInput{
 
     computeMinSpeed() {
         return this.settings.puck.defaultSpeed * this.settings.puck.speedCoeff
+    }
+
+    computeScoreDiffStress(gameState) {
+        const maxDiff= 5;
+        const scoreDiff = gameState.player1.goals.length - gameState.player2.goals.length;
+        const normalizeScoreDiff= Math.max(-maxDiff, Math.min(scoreDiff, maxDiff))
+        if (normalizeScoreDiff === 0) return 0;
+
+        const playerDiff = this.isP1 ? normalizeScoreDiff : -normalizeScoreDiff;
+        return this.maxScoreDiffReactionPenalty * (playerDiff / maxDiff);
     }
 
 
