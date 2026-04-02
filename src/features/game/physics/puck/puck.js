@@ -15,8 +15,8 @@ const makeGoalRect = (settings, isLeftGoal) => {
 } 
 const makePuckRectangle = (puckData) => {
     const puck = makeRect(puckData.x, puckData.y, puckData.size, puckData.size);
-    puck.center= puckData.y + puckData.size / 2;
-    puck.isGoingRight=  puckData.vx > 0;
+    puck.center = puckData.y + puckData.size / 2;
+    puck.isGoingRight =  isPuckGoingRight(puckData);
     return puck;
 }
 
@@ -28,6 +28,9 @@ const contains = (outer, inner) => inner.left >= outer.left
                                 && inner.right <= outer.right
                                 && inner.top >= outer.top
                                 && inner.bottom <= outer.bottom;
+
+export const isPuckMovingonX = (puck) => puck.vx !== 0;
+export const isPuckGoingRight = (puck) => puck.vx > 0;
 
 export const hasPuckReachEndOfGoal = (puck, settings) => {
     const puckRect = makePuckRectangle(puck);

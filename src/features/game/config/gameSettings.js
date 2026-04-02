@@ -3,17 +3,17 @@ import { GAMEMODE } from "../../../core/constants/game/gameMode";
 export const settings= {
     mode: GAMEMODE.solo,
     player1: {
-        defensePos: 8,
+        defensePos: 4,
         attackPos: 78
     },
     player2: {
-        defensePos: 92,
+        defensePos: 95,
         attackPos: 23
     },
     paddle : {
         height: 14,
         width: 1.3,
-        speed: 1.5
+        speed: 2
     },
     puck: {
         defaultSpeed: 1,
