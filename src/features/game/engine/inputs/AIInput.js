@@ -1,6 +1,6 @@
 import { GAMEPHASE } from "../../../../core/constants/game/gamePhase";
-import { IA_BEHAVIOR } from "../../../../core/constants/game/IABehavior";
-import { isPuckGoingRight, isPuckMovingonX as isPuckMovingOnX } from "../../physics/puck/puck";
+import { AIdecision } from "../behavior/AIDecision";
+
 
 export class AIInput{
     constructor(isP1, settings, defenseLevel = 50, attackLevel = 50,) {
@@ -14,6 +14,7 @@ export class AIInput{
         this.maxSpeedReactionPenalty = 0.08;
         this.maxScoreDiffReactionPenalty = 0.08;
         this.settings = settings;
+        this.AIDecision = new AIdecision(isP1, settings, defenseLevel, attackLevel);
     }
     
     normalizeLevel(value) {
@@ -33,6 +34,8 @@ export class AIInput{
     update(gameState, dt) {
         this.timer += dt;
         if (!this.isReactionTimeUp(gameState)) return;
+
+        this.AIDecision.update(gameState);
         
         this.timer = 0;
 
