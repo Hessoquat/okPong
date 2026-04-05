@@ -14,24 +14,10 @@ export class AIInput{
         this.maxSpeedReactionPenalty = 0.08;
         this.maxScoreDiffReactionPenalty = 0.08;
         this.settings = settings;
-        this.selfPosition = {
-            defense: this.normalizeX(isP1 ? settings.player1.defensePos : settings.player2.defensePos),
-            attack: this.normalizeX(isP1 ? settings.player1.attackPos : settings.player2.attackPos)
-        };
-        this.opponentPosition = {
-            defense: this.normalizeX(isP1 ? settings.player2.defensePos : settings.player1.defensePos),
-            attack: this.normalizeX(isP1 ? settings.player2.attackPos : settings.player1.attackPos)};
     }
     
     normalizeLevel(value) {
         return Math.min(Math.max(value, 0), 100) / 100;
-    }
-
-    normalizeX(x) {
-        return this.isP1 ? x : 100 - x;
-    }
-    normalizeVx(vx) {
-        return this.isP1 ? vx : -vx;
     }
 
     setReactionTime(level) {
@@ -66,7 +52,9 @@ export class AIInput{
     }
 
     isReactionTimeUp(gameState) {
-        const puckOnMySide = this.hasPuckPassedXPosition(gameState.puck, 50);
+        const puckOnMySide = 
+            (this.isP1 && gameState.puck.x <= 50) ||
+            (!this.isP1 && gameState.puck.x > 50);;
 
         const reactionTime = puckOnMySide
             ? this.defenseReactionTime
@@ -109,38 +97,7 @@ export class AIInput{
         const playerDiff = this.isP1 ? normalizeScoreDiff : -normalizeScoreDiff;
         return this.maxScoreDiffReactionPenalty * (playerDiff / maxDiff);
     }
-
-    setBehavior(game, puck) {
-        if (game.phase === GAMEPHASE.faceOff) return IA_BEHAVIOR.faceOff;
-        if (this.isPuckInDefenseZone(puck) 
-            || (!this.isPuckInAttackZone(puck) && this.isPuckGoingTowarMySide(puck)))
-            return IA_BEHAVIOR.defense;
-        if (this.isPuckInAttackZone(puck)
-            || (!this.isPuckInDefenseZone(puck) && !this.isPuckGoingTowarMySide(puck)))
-            return IA_BEHAVIOR.attack
-    }
-
-    isPuckInDefenseZone(puck) {
-        return this.normalizeX(puck.x) <= this.opponentPosition.attack;
-    }
-
-    isPuckInAttackZone(puck) {
-        return this.normalizeX(puck.x) >= this.selfPosition.attack;
-    }
-
-    hasPuckPassedXPosition(puck, x, whileGoingRight = true) {
-        const vx = this.normalizeVx(puck.vx);
-        if (vx > 0 !== whileGoingRight) return false;
-        
-        const normalizedPuckX = this.normalizeX(puck.x);
-        if (whileGoingRight) return normalizedPuckX <= x;
-        return normalizedPuckX >= x;
-    }
-
-    isPuckGoingTowarMySide(puck) {
-        return this.normalizeVx(puck.vx < 0);
-    }
-
+   
     playingMove(game, dt, paddleTop, paddleBottom) {
         if (game.puck.y > paddleBottom) {
             this.goDown();
@@ -152,11 +109,11 @@ export class AIInput{
     }
     goUp() {
         this.state.up = true;
-        this.state.down = false
+        this.state.down = false;
     }
     goDown() {
         this.state.up =false;
-        this.state.down= true
+        this.state.down= true;
     }
     standStill() {
         this.state.up = false;
