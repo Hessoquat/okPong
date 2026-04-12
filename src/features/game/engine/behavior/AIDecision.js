@@ -3,6 +3,8 @@ import { IA_BEHAVIOR } from "./constants/IABehavior";
 import { simplePuckStep } from "../../physics/puck/puck";
 import { PADDLE_MOVEMENT } from "./constants/paddleMovement";
 import { TRAJECTORY_TYPE } from "./constants/trajectoryType";
+import { PuckEvent } from "./types/puckEvent";
+import { PUCK_EVENT_TYPE } from "./constants/PuckEventType";
 
 export class AIdecision {
     
@@ -84,7 +86,7 @@ export class AIdecision {
         const normalizedState = this.normalizeGameState(gameState);
 
         this.gamePerception = {
-            currentBehavior : this.inferBehaiorMode(normalizedState),
+            currentBehavior : this.inferBehaviorMode(normalizedState),
             opponentYPostion: normalizedState.opponent.position,
             opponentMovement: this.analyzeOpponentMovement(normalizedState.phase, normalizedState.opponent.position),
             puck: normalizedState.puck,
@@ -107,7 +109,7 @@ export class AIdecision {
         }
     }
 
-    inferBehaiorMode(normalizedGame) {
+    inferBehaviorMode(normalizedGame) {
         if (normalizedGame.phase === GAMEPHASE.faceOff) return IA_BEHAVIOR.faceOff;
         if (this.isPuckInDefenseZone(normalizedGame.puck) 
             || (!this.isPuckInAttackZone(normalizedGame.puck) && this.isPuckGoingTowardMySide(normalizedGame.puck)))
@@ -176,82 +178,72 @@ export class AIdecision {
                 }
             };
 
-        const puckPrediction = this.computePuckTrajectoryEvents(gamePhase, normalizedPuck, targets, time);
-            console.log(puckPrediction  )
-        anticipations.selfCrossing = this.buildSelfCrossingPerception(puckPrediction, normalizedPuck);
+        const inferedEvents = this.computePuckTrajectoryEvents(gamePhase, normalizedPuck, targets, time);
+            console.log(inferedEvents  )
+        anticipations.selfCrossing = this.buildSelfCrossingPerception(inferedEvents, normalizedPuck);
+        anticipations.goalThreat = this.computeTrajectoryType(inferedEvents.atGoal.y);
 
         return anticipations;
     }
 
     computePuckTrajectoryEvents(gamePhase, normalizedPuck, targets, time) {
+         const predictedTargets= {
+            atSelfPaddle: new PuckEvent(PUCK_EVENT_TYPE.selfCrossing),
+            atOpponentPaddle: new PuckEvent(PUCK_EVENT_TYPE.opponentCrossing),
+            atGoal: new PuckEvent(PUCK_EVENT_TYPE.gloalLineCrossing)
+        };
         if (gamePhase !== GAMEPHASE.playing) {
-            return {
-                atOpponentPaddleX: {
-                    y: null,
-                    tImpact: null
-                },
-                atSelfPaddle:  {
-                    y: null,
-                    tImpact: null
-                },
-                trajectoryType: TRAJECTORY_TYPE.uncertain
-            };
+            return predictedTargets;
         }
         
         let projectedPuck = {...normalizedPuck}
-        const predictedTargets= {
-            atSelfPaddleX: {
-                y: null,
-                tImpact: null
-            },
-            atOpponentPaddleX: {
-                y: null,
-                tImpact: null,
-            },
-            trajectoryType: TRAJECTORY_TYPE.uncertain
-        }
+       
         let iteration = 0;
         while (
             (this.isPuckGoingTowardMySide(normalizedPuck) ? projectedPuck.x > targets.goal : projectedPuck.x < targets.goal)
              && iteration < 1000) {
             iteration++
             projectedPuck = simplePuckStep({puck: projectedPuck}, this.stepTime);
-            if (!predictedTargets.atSelfPaddleX.y 
+            if (!predictedTargets.atSelfPaddle.isSet
                 && this.hasPuckreachedTarget(projectedPuck, targets.self)){
-                    predictedTargets.atSelfPaddleX.y = projectedPuck.y;
-                    predictedTargets.atSelfPaddleX.tImpact = time + (iteration * this.stepTime);
+                    predictedTargets.atSelfPaddle.setData(projectedPuck.y,  this.copmputeProjectedTime(time, iteration));
                 }
-            if (!predictedTargets.atOpponentPaddleX.y && this.hasPuckreachedTarget(projectedPuck, targets.opponent)) {
-                predictedTargets.atOpponentPaddleX.y = projectedPuck.y;
-                predictedTargets.atOpponentPaddleX.tImpact = (targets.opponent - normalizedPuck.x) / normalizedPuck.vx;
+            if (!predictedTargets.atOpponentPaddle.isSet && this.hasPuckreachedTarget(projectedPuck, targets.opponent)) {
+                predictedTargets.atOpponentPaddle.setData(projectedPuck.y,  this.copmputeProjectedTime(time, iteration));
             }
-            if (!predictedTargets.trajectoryType && this.hasPuckreachedTarget(projectedPuck, targets.goal)) {
-                predictedTargets.trajectoryType = 
-                    projectedPuck.y >= this.goalSurfaceCoverage.top && projectedPuck.y <= this.goalSurfaceCoverage.bottom
-                        ? TRAJECTORY_TYPE.dangerous 
-                        : TRAJECTORY_TYPE.safe;
+            if (!predictedTargets.atGoal.isSet && this.hasPuckreachedTarget(projectedPuck, targets.goal)) {
+                predictedTargets.atGoal.setData(projectedPuck.y, this.copmputeProjectedTime(time, iteration));
             }
         }
 
         return predictedTargets;
     }
 
-    buildSelfCrossingPerception(puckPrediction, currentPuck) {
+    copmputeProjectedTime(time, iteration) {
+        return time + iteration * this.stepTime
+    }
+
+    computeTrajectoryType(puckPositionAtGoal) {
+        puckPositionAtGoal >= this.goalSurfaceCoverage.top && puckPositionAtGoal <= this.goalSurfaceCoverage.bottom
+                        ? TRAJECTORY_TYPE.dangerous 
+                        : TRAJECTORY_TYPE.safe;
+    }
+
+    buildSelfCrossingPerception(inferedEvent, currentPuck) {
         const selfCrossing =  {
-                yMin: null,
-                yMax: null,
-                tMin: null,
-                tMax: null,
-                certainty: null
-            };
-            if (this.gamePerception.currentBehavior !== IA_BEHAVIOR.attack 
-                && this.gamePerception.currentBehavior !== IA_BEHAVIOR.defense) 
-                return selfCrossing;
+            yMin: null,
+            yMax: null,
+            tMin: null,
+            tMax: null,
+            certainty: null
+        };
+        if (this.gamePerception.currentBehavior !== IA_BEHAVIOR.attack 
+            && this.gamePerception.currentBehavior !== IA_BEHAVIOR.defense) 
+            return selfCrossing;
         const level = this.gamePerception.currentBehavior === IA_BEHAVIOR.attack ? this.level.attack : this.level.defense;
-        const selfPaddleX = this.gamePerception.currentBehavior === IA_BEHAVIOR.attack ? this.selfXPosition.attack : this.selfXPosition.defense;
         const baseError = 1 - (level / 100);
-        selfCrossing.yMin = puckPrediction.atSelfPaddle - (5 * baseError);
-        selfCrossing.yMax = puckPrediction.atSelfPaddle + (5 * baseError);
+        selfCrossing.yMin = inferedEvent.atSelfPaddle.y - (5 * baseError);
+        selfCrossing.yMax = inferedEvent.atSelfPaddle.y + (5 * baseError);
 
         return selfCrossing;
     }
