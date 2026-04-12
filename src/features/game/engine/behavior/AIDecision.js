@@ -9,6 +9,7 @@ export class AIdecision {
     constructor(isP1, settings, defenseLevel = 50, attackLevel = 50,) {
         this.isP1 = isP1;
                 this.settings = settings;
+                this.level = {attack: attackLevel, defense: defenseLevel}, 
         this.selfXPosition = {
             defense: this.normalizeX(isP1 ? settings.player1.defensePos : settings.player2.defensePos),
             attack: this.normalizeX(isP1 ? settings.player1.attackPos : settings.player2.attackPos)
@@ -16,8 +17,8 @@ export class AIdecision {
         this.opponentXPosition = {
             defense: this.normalizeX(isP1 ? settings.player2.defensePos : settings.player1.defensePos),
             attack: this.normalizeX(isP1 ? settings.player2.attackPos : settings.player1.attackPos)};
-        this.gameRepresentation = {
-            currentPhase: null,
+        this.gamePerception = {
+            currentBehavior: null,
             opponentYPostion: null,
             opponentMovement: null,
             puck: {
@@ -29,12 +30,23 @@ export class AIdecision {
                 speed: null,
             },
             puckAnticipation: {
-                atOpponentPaddleX: null,
-                atSelfPaddleX: null,
-                trajectoryType: TRAJECTORY_TYPE.uncertain
+                selfCrossing:  {
+                    yMin: null,
+                    yMax: null,
+                    tMin: null,
+                    tMax: null,
+                    certainty: null
+                },
+                opponentInterception: {
+                    possible: null,
+                    influenceRange: null
+                },
+                goalThreat: {
+                    isOnTarget: TRAJECTORY_TYPE.uncertain,
+                }
             }
         }
-        this.anticipationSkill = 0.16;
+        this.stepTime = 0.16;
         this.goalSurfaceCoverage = {
             top: 50 - (settings.goal.size / 2),
             bottom: 50 + (settings.goal.size / 2)
@@ -71,15 +83,15 @@ export class AIdecision {
     update(gameState) {
         const normalizedState = this.normalizeGameState(gameState);
 
-        this.gameRepresentation = {
-            currentPhase : this.setBehavior(normalizedState),
+        this.gamePerception = {
+            currentBehavior : this.inferBehaiorMode(normalizedState),
             opponentYPostion: normalizedState.opponent.position,
             opponentMovement: this.analyzeOpponentMovement(normalizedState.phase, normalizedState.opponent.position),
             puck: normalizedState.puck,
         };
 
         if (normalizedState.phase === GAMEPHASE.playing) {
-            const targets = this.gameRepresentation.currentPhase === IA_BEHAVIOR.defense ? 
+            const targets = this.gamePerception.currentBehavior === IA_BEHAVIOR.defense ? 
                 {
                     self: this.selfXPosition.defense,
                     opponent: this.opponentXPosition.attack,
@@ -91,11 +103,11 @@ export class AIdecision {
                     goal: 100 - (this.settings.goal.backGap + this.settings.goal.depth)
                 };
             
-            this.gameRepresentation.puckAnticipation = this.predictPuckPositions(normalizedState.phase, normalizedState.puck, targets);
+            this.gamePerception.puckAnticipation = this.buildGameSituationModel(normalizedState.phase, normalizedState.puck, targets, gameState.time);
         }
     }
 
-    setBehavior(normalizedGame) {
+    inferBehaiorMode(normalizedGame) {
         if (normalizedGame.phase === GAMEPHASE.faceOff) return IA_BEHAVIOR.faceOff;
         if (this.isPuckInDefenseZone(normalizedGame.puck) 
             || (!this.isPuckInAttackZone(normalizedGame.puck) && this.isPuckGoingTowardMySide(normalizedGame.puck)))
@@ -146,33 +158,72 @@ export class AIdecision {
         return movement;
     }
 
-    predictPuckPositions(gamePhase, normalizedPuck, targets) {
+    buildGameSituationModel(gamePhase, normalizedPuck, targets) {
+        let anticipations = {
+                selfCrossing:  {
+                    yMin: null,
+                    yMax: null,
+                    tMin: null,
+                    tMax: null,
+                    certainty: null
+                },
+                opponentInterception: {
+                    possible: null,
+                    influenceRange: null
+                },
+                goalThreat: {
+                    isOnTarget: TRAJECTORY_TYPE.uncertain,
+                }
+            };
+
+        const puckPrediction = this.computePuckTrajectoryEvents(gamePhase, normalizedPuck, targets, time);
+            console.log(puckPrediction  )
+        anticipations.selfCrossing = this.buildSelfCrossingPerception(puckPrediction, normalizedPuck);
+
+        return anticipations;
+    }
+
+    computePuckTrajectoryEvents(gamePhase, normalizedPuck, targets, time) {
         if (gamePhase !== GAMEPHASE.playing) {
             return {
-                atOpponentPaddleX: null,
-                atSelfPaddle: null,
+                atOpponentPaddleX: {
+                    y: null,
+                    tImpact: null
+                },
+                atSelfPaddle:  {
+                    y: null,
+                    tImpact: null
+                },
                 trajectoryType: TRAJECTORY_TYPE.uncertain
             };
         }
         
         let projectedPuck = {...normalizedPuck}
         const predictedTargets= {
-            atSelfPaddleX: null,
-            atOpponentPaddleX: null,
+            atSelfPaddleX: {
+                y: null,
+                tImpact: null
+            },
+            atOpponentPaddleX: {
+                y: null,
+                tImpact: null,
+            },
             trajectoryType: TRAJECTORY_TYPE.uncertain
         }
         let iteration = 0;
         while (
             (this.isPuckGoingTowardMySide(normalizedPuck) ? projectedPuck.x > targets.goal : projectedPuck.x < targets.goal)
-             || iteration >= 100) {
+             && iteration < 1000) {
             iteration++
-            projectedPuck = simplePuckStep({puck: projectedPuck}, this.anticipationSkill);
-            if (!predictedTargets. atSelfPaddleX 
+            projectedPuck = simplePuckStep({puck: projectedPuck}, this.stepTime);
+            if (!predictedTargets.atSelfPaddleX.y 
                 && this.hasPuckreachedTarget(projectedPuck, targets.self)){
-                    predictedTargets.atSelfPaddleX = projectedPuck.y;
+                    predictedTargets.atSelfPaddleX.y = projectedPuck.y;
+                    predictedTargets.atSelfPaddleX.tImpact = time + (iteration * this.stepTime);
                 }
-            if (!predictedTargets.atOpponentPaddleX && this.hasPuckreachedTarget(projectedPuck, targets.opponent)) {
-                predictedTargets.atOpponentPaddleX = projectedPuck.y;
+            if (!predictedTargets.atOpponentPaddleX.y && this.hasPuckreachedTarget(projectedPuck, targets.opponent)) {
+                predictedTargets.atOpponentPaddleX.y = projectedPuck.y;
+                predictedTargets.atOpponentPaddleX.tImpact = (targets.opponent - normalizedPuck.x) / normalizedPuck.vx;
             }
             if (!predictedTargets.trajectoryType && this.hasPuckreachedTarget(projectedPuck, targets.goal)) {
                 predictedTargets.trajectoryType = 
@@ -185,6 +236,24 @@ export class AIdecision {
         return predictedTargets;
     }
 
-    defenseDecision() {}
+    buildSelfCrossingPerception(puckPrediction, currentPuck) {
+        const selfCrossing =  {
+                yMin: null,
+                yMax: null,
+                tMin: null,
+                tMax: null,
+                certainty: null
+            };
+            if (this.gamePerception.currentBehavior !== IA_BEHAVIOR.attack 
+                && this.gamePerception.currentBehavior !== IA_BEHAVIOR.defense) 
+                return selfCrossing;
+        const level = this.gamePerception.currentBehavior === IA_BEHAVIOR.attack ? this.level.attack : this.level.defense;
+        const selfPaddleX = this.gamePerception.currentBehavior === IA_BEHAVIOR.attack ? this.selfXPosition.attack : this.selfXPosition.defense;
+        const baseError = 1 - (level / 100);
+        selfCrossing.yMin = puckPrediction.atSelfPaddle - (5 * baseError);
+        selfCrossing.yMax = puckPrediction.atSelfPaddle + (5 * baseError);
+
+        return selfCrossing;
+    }
 
 }
