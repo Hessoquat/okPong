@@ -90,7 +90,7 @@ export class AIdecision {
     }
 
     dynamicReactionTime(gameState) {
-        const reactionTime = this.skillsModel.getReactionTime(this.gamePerception.currentBehavior);
+        const reactionTime = this.gamePerception.currentBehavior === IA_BEHAVIOR.defense ? this.skillsModel.reactionTime.defense: this.skillsModel.reactionTime.attack;
         const puckSpeedPenalty = this.computePuckSpeedStress(this.gamePerception.puck);
         const scoreDiffPenalty = this.computeScoreDiffStress(gameState);
         return reactionTime + puckSpeedPenalty + scoreDiffPenalty;

@@ -17,26 +17,22 @@ export class IASkillsModel{
         };
     };
 
-    getReactionTime(currentBehavior) {
-        if (currentBehavior !== IA_BEHAVIOR.attack && currentBehavior !== IA_BEHAVIOR.defense) return false;
-        return currentBehavior === IA_BEHAVIOR.attack ? this.reactionTime.attack : this.reactionTime.defense;
-    }
 
     setPuckSpeedSensitivity(level) {
         const baseSensitivity = 0.05;
         return {
-            attack: baseSensitivity + this.normalizedthousandth(level.attack),
-            defense: baseSensitivity +  this.normalizedthousandth(level.defense)
+            attack: baseSensitivity + this.normalizedhundredth(level.attack),
+            defense: baseSensitivity +  this.normalizedhundredth(level.defense)
         }
     }
     setScoreDiffSensitivity(averageLevel) {
-        const baseSensitivity = 0.03
-        const normalizedLevel = this.normalizedthousandth(averageLevel);
+        const baseSensitivity = 0.05
+        const normalizedLevel = this.normalizedhundredth(averageLevel);
         return baseSensitivity + normalizedLevel;
     }
 
-    normalizedthousandth(level) {
-        return (0.1 - averageLevel / 1000)
+    normalizedhundredth(level) {
+        return (1 - level / 100)
     }
 
 }
