@@ -5,13 +5,15 @@ import { PADDLE_MOVEMENT } from "./constants/paddleMovement";
 import { TRAJECTORY_TYPE } from "./constants/trajectoryType";
 import { PuckEvent } from "./types/puckEvent";
 import { PUCK_EVENT_TYPE } from "./constants/PuckEventType";
+import { IASkillsModel } from "../skills/IASkillsModel";
 
 export class AIdecision {
     
     constructor(isP1, settings, defenseLevel = 50, attackLevel = 50,) {
         this.isP1 = isP1;
-                this.settings = settings;
-                this.level = {attack: attackLevel, defense: defenseLevel}, 
+        this.settings = settings;
+        this.level = {attack: attackLevel, defense: defenseLevel},
+        this.skillsModel = new IASkillsModel({attack: attackLevel, defense: defenseLevel}); 
         this.selfXPosition = {
             defense: this.normalizeX(isP1 ? settings.player1.defensePos : settings.player2.defensePos),
             attack: this.normalizeX(isP1 ? settings.player1.attackPos : settings.player2.attackPos)
@@ -54,6 +56,7 @@ export class AIdecision {
             bottom: 50 + (settings.goal.size / 2)
         }
         this.prevOpponentYPos = null;
+        this.timer = 0;
 
     }
 
@@ -81,9 +84,53 @@ export class AIdecision {
             }
         }
     }
+    
+    isReactionTimeUp(gameState) {
+        return this.timer >= this.dynamicReactionTime(gameState);
+    }
 
-    update(gameState) {
+    dynamicReactionTime(gameState) {
+        const reactionTime = this.skillsModel.getReactionTime(this.gamePerception.currentBehavior);
+        const puckSpeedPenalty = this.computePuckSpeedStress(this.gamePerception.puck);
+        const scoreDiffPenalty = this.computeScoreDiffStress(gameState);
+        return reactionTime + puckSpeedPenalty + scoreDiffPenalty;
+    }
+    
+    computePuckSpeedStress(puck) {
+        const puckSpeed = Math.hypot(puck.vx, puck.vy) * puck.speed;
+        
+        const maxSpeed = this.computeMaxSpeed();
+        const minSpeed = this.computeMinSpeed()
+        let normalizedPuckSpeed = (puckSpeed - minSpeed) / (maxSpeed - minSpeed);
+        normalizedPuckSpeed = Math.max(0, Math.min(1, normalizedPuckSpeed));
+        const stressPenalty = this.skillsModel.puckSpeedSensitivity * Math.pow(normalizedPuckSpeed, 0.5);
+        return this.gamePerception.currentBehavior === IA_BEHAVIOR.defense ? stressPenalty * -1 : stressPenalty ;
+    }
+
+    computeMaxSpeed() {
+        const maxDeflection = Math.max(this.settings.puck.YDeviationCoeff, this.settings.goal.postDeflectionCoeff);
+        return Math.hypot(this.settings.puck.defaultSpeed, maxDeflection) * this.settings.puck.maxSpeed;
+    }
+
+    computeMinSpeed() {
+        return this.settings.puck.defaultSpeed * this.settings.puck.speedCoeff
+    }
+
+    computeScoreDiffStress(gameState) {
+        const maxDiff= 5;
+        const scoreDiff = gameState.self.goals.length - gameState.opponent.goals.length;
+        const normalizeScoreDiff= Math.max(-maxDiff, Math.min(scoreDiff, maxDiff))
+        if (normalizeScoreDiff === 0) return 0;
+
+        return this.skillsModel.scoreDiffSensitivity * (scoreDiff / maxDiff);
+    }
+
+    update(gameState, dt) {
         const normalizedState = this.normalizeGameState(gameState);
+        this.timer += dt;
+        if (!this.isReactionTimeUp(normalizedState)) return;
+
+        this.timer = 0;
 
         this.gamePerception = {
             currentBehavior : this.inferBehaviorMode(normalizedState),
@@ -107,6 +154,8 @@ export class AIdecision {
             
             this.gamePerception.puckAnticipation = this.buildGameSituationModel(normalizedState.phase, normalizedState.puck, targets, gameState.time);
         }
+
+        
     }
 
     inferBehaviorMode(normalizedGame) {
@@ -160,7 +209,7 @@ export class AIdecision {
         return movement;
     }
 
-    buildGameSituationModel(gamePhase, normalizedPuck, targets) {
+    buildGameSituationModel(gamePhase, normalizedPuck, targets, time) {
         let anticipations = {
                 selfCrossing:  {
                     yMin: null,
@@ -179,7 +228,6 @@ export class AIdecision {
             };
 
         const inferedEvents = this.computePuckTrajectoryEvents(gamePhase, normalizedPuck, targets, time);
-            console.log(inferedEvents  )
         anticipations.selfCrossing = this.buildSelfCrossingPerception(inferedEvents, normalizedPuck);
         anticipations.goalThreat = this.computeTrajectoryType(inferedEvents.atGoal.y);
 
